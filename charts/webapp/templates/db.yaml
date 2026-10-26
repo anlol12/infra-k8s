@@ -1,0 +1,60 @@
+{{- if .Values.db.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}-db
+spec:
+  clusterIP: None
+  selector:
+    app: {{ .Values.name }}-db
+  ports:
+    - name: db
+      port: {{ .Values.db.port }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name }}-db
+spec:
+  serviceName: {{ .Values.name }}-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}-db
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}-db
+    spec:
+      containers:
+        - name: db
+          image: {{ .Values.db.image }}
+          ports:
+            - containerPort: {{ .Values.db.port }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.dbSecret }}
+          {{- with .Values.db.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            exec:
+              command: {{ toJson .Values.db.readyCmd }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.db.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.db.mountPath }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.db.storage }}
+{{- end }}

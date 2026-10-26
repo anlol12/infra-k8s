@@ -1,0 +1,62 @@
+name: app
+replicaCount: 1
+containerPort: 80
+image:
+  repository: app
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+appSecret: app-secret
+dbSecret: app-db-secret
+config: {}
+probes:
+  readiness: /
+  liveness: /
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+migrate:
+  enabled: false
+  command: ""
+ingress:
+  enabled: true
+  host: ""
+  clusterIssuer: local-ca
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  cpuUtilization: 50
+quota:
+  requests.cpu: "1"
+  requests.memory: 1Gi
+  limits.cpu: "3"
+  limits.memory: 4Gi
+  requests.storage: 5Gi
+  persistentvolumeclaims: "2"
+  pods: "15"
+db:
+  enabled: true
+  image: ""
+  port: 0
+  storage: 1Gi
+  mountPath: ""
+  readyCmd: []
+  extraEnv: []
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+metrics:
+  serviceMonitor:
+    enabled: false
+    path: /metrics
+  probe:
+    enabled: true
+    path: /

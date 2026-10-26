@@ -1,0 +1,30 @@
+{{- if .Values.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  endpoints:
+    - port: http
+      path: {{ .Values.metrics.serviceMonitor.path }}
+      interval: 15s
+{{- end }}
+{{- if .Values.metrics.probe.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: {{ .Values.name }}-http
+spec:
+  interval: 30s
+  module: http_2xx
+  prober:
+    url: blackbox-prometheus-blackbox-exporter.monitoring.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - http://{{ .Values.name }}.{{ .Release.Namespace }}.svc{{ .Values.metrics.probe.path }}
+{{- end }}

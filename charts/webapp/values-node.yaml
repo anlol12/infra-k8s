@@ -1,0 +1,48 @@
+name: nodeapi
+containerPort: 3000
+image:
+  repository: node-api
+  tag: '1.0.0'
+appSecret: nodeapi-secret
+dbSecret: nodeapi-db-secret
+config:
+  NODE_ENV: production
+  PORT: 3000
+  DB_SSL: false
+  APP_VERSION: v1.0
+probes:
+  readiness: /health
+  liveness: /
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+ingress:
+  host: api.192-168-0-18.sslip.io
+db:
+  image: postgres:16-alpine
+  port: 5432
+  mountPath: /var/lib/postgresql/data
+  extraEnv:
+    - name: PGDATA
+      value: /var/lib/postgresql/data/pgdata
+  readyCmd:
+    - sh
+    - -c
+    - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+metrics:
+  serviceMonitor:
+    enabled: true
+    path: /metrics
+  probe:
+    path: /health
