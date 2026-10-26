@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: laravel
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/anlol12/infra-k8s.git
+    targetRevision: main
+    path: charts/webapp
+    helm:
+      valueFiles:
+      - values-laravel.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-laravel
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
